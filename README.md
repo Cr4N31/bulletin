@@ -1,50 +1,42 @@
-# Welcome to your Expo app 👋
+# Bulletin
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A personal habit, goal, and project tracker built with React Native built as a reaction to Notion paywalling database/scheduling features I actually want for free.
 
-## Get started
+Second React Native practice project (first was [Cranium](../../cranium), an invoice tracker for freelance work). This one's being built mostly solo, with AI kept in a support/debugging role rather than generating the app outright — see `Build Roadmap` below for how that's structured.
 
-1. Install dependencies
+## Status: early schema/foundation phase
 
-   ```bash
-   npm install
-   ```
+Not yet functional as an app — currently wiring up the data layer before any real UI work begins.
 
-2. Start the app
+## Tech stack
 
-   ```bash
-   npx expo start
-   ```
+- **Expo** (React Native, TypeScript)
+- **expo-router** — file-based navigation
+- **expo-sqlite** — local, offline-first storage
+- **NativeWind** — Tailwind for React Native
 
-In the output, you'll find options to open the app in a
+## Data model (current)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Four core entities, each representing a different kind of thing being tracked:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **`habits`** — recurring, yes/no daily habits (e.g. "meditate"). Has a `scheduleDays` field (which days it applies) and an `isPriority` flag — the priority habit is meant to surface a 30-day streak graph on the Home screen.
+- **`habit_log`** — one row per day a habit is marked complete/incomplete. Completion lives here, not on `habits` itself, since a habit is a recurring definition and completion is a per-day fact.
+- **`project`** — one-off tracked items with `status`, `priority`, and `progress` (not recurring, not calendar-based — closer to a lightweight task tracker).
+- **`meeting`** — dated/timed calendar entries.
 
-## Get a fresh project
+All tables use auto-incrementing integer primary keys (`INTEGER PRIMARY KEY AUTOINCREMENT`) rather than UUIDs, since this is a single-device app with no sync planned — simpler than the UUID approach used in Cranium.
 
-When you're ready, run:
+Schema lives in `db/schema.ts`, initialized once on app mount via `initDatabase()`.
 
-```bash
-npm run reset-project
-```
+## Planned features (not yet built)
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- Home screen: overview/stats summary first, condensed goals summary, priority-habit streak graph
+- Per-habit detail screen with its own 30-day streak graph
+- Goals with numeric progress tracking
+- Meetings/schedule screen
+- Floating pill nav bar (Home / Meetings / Activity) — component built, not yet wired to real screens
 
-## Learn more
+## Notes to self
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `expo-sqlite`'s `execSync` can fail to parse a combined multi-statement SQL string even when every individual statement is valid — split multiple `CREATE TABLE` calls into separate `execSync` calls if a "syntax error near )" shows up with no obvious cause.
+- Schema/DB init only runs on a genuine cold start (`useEffect` on mount) — fast refresh won't re-trigger it after editing `schema.ts`.
