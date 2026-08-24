@@ -16,8 +16,8 @@ export default function NavBar() {
       activeIcon: "home" as const,
     },
     {
-      name: "Meetings",
-      route: "/(screens)/meeting",
+      name: "Workspace",
+      route: "/(screens)/workspace",
       icon: "calendar-outline" as const,
       activeIcon: "calendar" as const,
     },
