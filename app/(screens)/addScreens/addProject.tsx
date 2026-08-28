@@ -1,0 +1,196 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { createProject, Project } from "@/db/project";
+
+const PRIORITIES: Project["priority"][] = ["Low", "Medium", "High"];
+
+export default function AddProject() {
+  const router = useRouter();
+
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState<Project["priority"]>("Medium");
+  const [notes, setNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function handleCreateProject() {
+    if (!title.trim()) {
+      Alert.alert("Project name required", "Give your project a name first.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await createProject(
+        title.trim(),
+        "Not Started",
+        priority,
+        0,
+        notes.trim(),
+      );
+      router.back();
+    } catch (error) {
+      console.error("Failed to create project:", error);
+      Alert.alert(
+        "Something went wrong",
+        "We couldn't create this project. Please try again.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <SafeAreaView
+      edges={["top", "bottom", "left", "right"]}
+      className="flex-1 bg-[#F8F8F8]"
+    >
+      <View className="px-6 py-5 flex-row items-center justify-between">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+          className="w-10 h-10 rounded-full bg-black/5 items-center justify-center"
+        >
+          <Ionicons name="arrow-back" size={20} color="black" />
+        </TouchableOpacity>
+
+        <Text className="text-lg font-semibold">New Project</Text>
+
+        <TouchableOpacity
+          onPress={handleCreateProject}
+          disabled={isSaving}
+          activeOpacity={0.7}
+        >
+          <Text
+            className={`font-semibold ${isSaving ? "text-gray-400" : "text-black"}`}
+          >
+            {isSaving ? "Saving..." : "Done"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 50 }}
+      >
+        <View className="px-6 pt-8">
+          <Text className="text-gray-500 text-sm font-medium uppercase tracking-wider">
+            Project
+          </Text>
+
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="What are you working on?"
+            placeholderTextColor="#A3A3A3"
+            autoFocus
+            selectionColor="black"
+            className="text-2xl font-bold mt-2"
+          />
+
+          <Text className="text-gray-500 mt-3 text-base">
+            Track it from start to finish.
+          </Text>
+        </View>
+
+        {/* Preview */}
+        <View className="px-6 mt-8">
+          <View className="bg-black rounded-[28px] p-6">
+            <View className="flex-row items-center justify-between">
+              <View className="w-12 h-12 rounded-2xl bg-white/10 items-center justify-center">
+                <Ionicons name="folder-outline" size={25} color="white" />
+              </View>
+              <View className="rounded-full bg-white/10 px-3 py-2">
+                <Text className="text-white/70 text-xs font-medium">
+                  PROJECT
+                </Text>
+              </View>
+            </View>
+
+            <Text className="text-white text-2xl font-bold mt-6">
+              {title.trim() || "Your new project"}
+            </Text>
+
+            <Text className="text-white/50 mt-2">
+              {priority} priority · Not started
+            </Text>
+          </View>
+        </View>
+
+        {/* Priority */}
+        <View className="px-6 mt-10">
+          <Text className="text-lg font-bold">Priority</Text>
+          <Text className="text-gray-500 mt-1">
+            How important is this project?
+          </Text>
+
+          <View className="flex-row mt-5 gap-2">
+            {PRIORITIES.map((p) => {
+              const selected = priority === p;
+              return (
+                <TouchableOpacity
+                  key={p}
+                  onPress={() => setPriority(p)}
+                  activeOpacity={0.8}
+                  className={`flex-1 rounded-2xl py-3 items-center ${
+                    selected ? "bg-black" : "bg-white border border-black/5"
+                  }`}
+                >
+                  <Text
+                    className={`font-semibold ${selected ? "text-white" : "text-black"}`}
+                  >
+                    {p}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Notes */}
+        <View className="px-6 mt-10">
+          <Text className="text-lg font-bold">Notes</Text>
+          <Text className="text-gray-500 mt-1">
+            Any details worth remembering?
+          </Text>
+
+          <View className="bg-white border border-black/5 rounded-2xl mt-4 p-4">
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Scope, deadline, next steps..."
+              placeholderTextColor="#A3A3A3"
+              multiline
+              textAlignVertical="top"
+              selectionColor="black"
+              className="text-base min-h-[130px]"
+            />
+          </View>
+        </View>
+
+        <TouchableOpacity
+          onPress={handleCreateProject}
+          disabled={isSaving}
+          activeOpacity={0.85}
+          className={`mx-6 mt-10 h-14 rounded-2xl items-center justify-center ${
+            isSaving ? "bg-gray-300" : "bg-black"
+          }`}
+        >
+          <Text className="text-white font-semibold text-base">
+            {isSaving ? "Creating project..." : "Create project"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { createHabit as createHabitInDb } from "@/db/habit";
 import { db } from "@/db/database";
 
 const DAYS = [
@@ -61,7 +61,7 @@ export default function AddHabit() {
     setScheduleDays(["sat", "sun"]);
   };
 
-  const createHabit = async () => {
+  const handleCreateHabit = async () => {
     if (!title.trim()) {
       Alert.alert("Habit name required", "Give your habit a name first.");
       return;
@@ -77,31 +77,14 @@ export default function AddHabit() {
 
     try {
       setIsSaving(true);
-
-      const createdAt = new Date().toISOString();
-
-      await db.runAsync(
-        `
-          INSERT INTO habits (
-            title,
-            isPriority,
-            scheduleDays,
-            createdAt
-          )
-          VALUES (?, ?, ?, ?)
-        `,
-        [
-          title.trim(),
-          isPriority ? 1 : 0,
-          JSON.stringify(scheduleDays),
-          createdAt,
-        ],
+      await createHabitInDb(
+        title.trim(),
+        isPriority,
+        JSON.stringify(scheduleDays),
       );
-
       router.back();
     } catch (error) {
       console.error("Failed to create habit:", error);
-
       Alert.alert(
         "Something went wrong",
         "We couldn't create this habit. Please try again.",
@@ -110,7 +93,6 @@ export default function AddHabit() {
       setIsSaving(false);
     }
   };
-
   return (
     <SafeAreaView
       edges={["top", "bottom", "left", "right"]}
@@ -129,7 +111,7 @@ export default function AddHabit() {
         <Text className="text-lg font-semibold">New Habit</Text>
 
         <TouchableOpacity
-          onPress={createHabit}
+          onPress={handleCreateHabit}
           disabled={isSaving}
           activeOpacity={0.7}
         >
@@ -344,7 +326,7 @@ export default function AddHabit() {
 
         {/* Bottom Create Button */}
         <TouchableOpacity
-          onPress={createHabit}
+          onPress={handleCreateHabit}
           disabled={isSaving}
           activeOpacity={0.85}
           className={`mx-6 mt-10 h-14 rounded-2xl items-center justify-center ${

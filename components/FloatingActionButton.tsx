@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Ionicons } from "@expo/vector-icons";
 import { View, TouchableOpacity, Text, Animated, Easing } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
@@ -11,19 +11,19 @@ export default function FloatingActionButton() {
     {
       label: "Meetings",
       icon: "people-outline",
-      route: "/addMeetings",
+      route: "/(screens)/addScreens/addMeetings",
       type: "meeting",
     },
     {
       label: "Projects",
       icon: "folder-outline",
-      route: "/addProject",
+      route: "/(screens)/addScreens/addProject",
       type: "project",
     },
     {
       label: "Habits",
       icon: "checkmark-circle-outline",
-      route: "/addHabits",
+      route: "/(screens)/addScreens/addHabits",
       type: "habit",
     },
   ];
