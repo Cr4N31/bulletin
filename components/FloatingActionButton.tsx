@@ -2,10 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { View, TouchableOpacity, Text, Animated, Easing } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 
 export default function FloatingActionButton() {
   const [toggle, setToggle] = useState(false);
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const ACTIONS = [
     {
@@ -85,6 +88,7 @@ export default function FloatingActionButton() {
         return (
           <Animated.View
             key={action.label}
+            pointerEvents={toggle ? "auto" : "none"}
             style={{
               position: "absolute",
               bottom: 0,
@@ -96,26 +100,31 @@ export default function FloatingActionButton() {
             <TouchableOpacity
               activeOpacity={0.8}
               className="flex-row items-center"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               onPress={() => handleActionPress(action)}
             >
               {/* Label */}
-              <View className="mr-3 rounded-full bg-black/80 px-4 py-2">
+              <View className="mr-3 rounded-full bg-black/80 dark:bg-[#252525] px-4 py-2">
                 <Text className="text-white font-medium">{action.label}</Text>
               </View>
 
               {/* Icon bubble */}
               <View
+                className="bg-white border border-black/10 dark:bg-[#252525]"
                 style={{
                   width: 48,
                   height: 48,
                   borderRadius: 24,
                   marginRight: 30,
-                  backgroundColor: "white",
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Ionicons name={action.icon as any} size={20} color="black" />
+                <Ionicons
+                  name={action.icon as any}
+                  size={20}
+                  color={isDark ? "#fff" : "#000"}
+                />
               </View>
             </TouchableOpacity>
           </Animated.View>
@@ -125,7 +134,7 @@ export default function FloatingActionButton() {
       {/* Main FAB */}
       <TouchableOpacity
         onPress={() => setToggle((prev) => !prev)}
-        className="w-16 h-16 bg-white/40 border border-black/5 backdrop-blur rounded-full justify-center items-center"
+        className="w-16 h-16 bg-white/30 dark:bg-[#252525] border border-black/5 backdrop-blur rounded-full justify-center items-center"
         activeOpacity={0.8}
       >
         <Animated.View
@@ -137,7 +146,7 @@ export default function FloatingActionButton() {
             ],
           }}
         >
-          <Ionicons name="add" size={25} color="black" />
+          <Ionicons name="add" size={25} color={isDark ? "#fff" : "#000"} />
         </Animated.View>
       </TouchableOpacity>
     </View>

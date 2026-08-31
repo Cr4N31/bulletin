@@ -1,4 +1,5 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { useColorScheme } from "nativewind";
 import { HabitLog } from "@/db/habit";
 
 function getLast30Dates(): string[] {
@@ -12,10 +13,15 @@ function getLast30Dates(): string[] {
 }
 
 export default function StreakGraph({ logs }: { logs: HabitLog[] }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const dates = getLast30Dates();
   const completedDates = new Set(
     logs.filter((l) => l.completed).map((l) => l.date),
   );
+
+  const filledColor = isDark ? "#ada9a3" : "#000";
+  const emptyColor = isDark ? "#ffffff15" : "#00000010";
 
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
@@ -28,7 +34,7 @@ export default function StreakGraph({ logs }: { logs: HabitLog[] }) {
               width: 22,
               height: 22,
               borderRadius: 5,
-              backgroundColor: completed ? "#000" : "#00000010",
+              backgroundColor: completed ? filledColor : emptyColor,
             }}
           />
         );

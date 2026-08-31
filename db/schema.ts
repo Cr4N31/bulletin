@@ -34,6 +34,16 @@ export function initDatabase() {
  `);
 
   db.execSync(`
+    CREATE TABLE IF NOT EXISTS project_progress_log(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    projectId INTEGER NOT NULL,
+    amountAdded INTEGER NOT NULL,
+    note TEXT,
+    createdAt TEXT NOT NULL,
+    FOREIGN KEY(projectId) REFERENCES project (id))
+  `);
+
+  db.execSync(`
     CREATE TABLE IF NOT EXISTS meetings( 
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         title TEXT NOT NULL, 
@@ -43,5 +53,15 @@ export function initDatabase() {
         createdAt TEXT NOT NULL 
     );
  `);
+
+  db.execSync(`
+    CREATE TABLE IF NOT EXISTS activity_log(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        action TEXT NOT NULL,
+        description TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+); 
+      `);
   console.log("Tables created");
 }

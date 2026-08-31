@@ -3,10 +3,13 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { View, Text, TouchableOpacity, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
 import { getProjects, Project } from "@/db/project";
 
 export default function ProjectsList() {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [projects, setProjects] = useState<Project[]>([]);
 
   useFocusEffect(
@@ -18,16 +21,22 @@ export default function ProjectsList() {
   return (
     <SafeAreaView
       edges={["top", "left", "right", "bottom"]}
-      className="flex-1 bg-[#F8F8F8]"
+      className="flex-1 bg-[#F8F8F8] dark:bg-[#191919]"
     >
       <View className="px-6 py-5 flex-row items-center gap-3">
         <TouchableOpacity
           onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-black/5 items-center justify-center"
+          className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 items-center justify-center"
         >
-          <Ionicons name="arrow-back" size={20} color="black" />
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={isDark ? "#fff" : "#000"}
+          />
         </TouchableOpacity>
-        <Text className="text-2xl font-bold">Projects</Text>
+        <Text className="text-2xl font-bold text-black dark:text-white">
+          Projects
+        </Text>
       </View>
 
       <FlatList
@@ -43,27 +52,43 @@ export default function ProjectsList() {
               }
               activeOpacity={0.7}
               className={`flex-row items-center gap-3 p-4 mb-2 rounded-2xl border ${
-                done ? "bg-black/5 border-black/5" : "bg-white border-black/5"
+                done
+                  ? "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5"
+                  : "bg-white dark:bg-[#252525] border-black/5 dark:border-white/5"
               }`}
             >
               <View
                 className={`w-10 h-10 rounded-xl items-center justify-center ${
-                  done ? "bg-black/10" : "bg-black"
+                  done
+                    ? "bg-black/10 dark:bg-white/10"
+                    : "bg-black dark:bg-[#ada9a3]"
                 }`}
               >
                 <Ionicons
                   name={done ? "checkmark" : "folder-outline"}
                   size={18}
-                  color={done ? "#00000060" : "white"}
+                  color={
+                    done
+                      ? isDark
+                        ? "#ffffff60"
+                        : "#00000060"
+                      : isDark
+                        ? "#191919"
+                        : "white"
+                  }
                 />
               </View>
               <View className="flex-1">
                 <Text
-                  className={`font-semibold ${done ? "text-black/40" : "text-black"}`}
+                  className={`font-semibold ${
+                    done
+                      ? "text-black/40 dark:text-white/40"
+                      : "text-black dark:text-white"
+                  }`}
                 >
                   {item.title}
                 </Text>
-                <Text className="text-xs text-black/40 mt-0.5">
+                <Text className="text-xs text-black/40 dark:text-white/40 mt-0.5">
                   {item.status} · {item.progress}%
                 </Text>
               </View>
@@ -72,7 +97,9 @@ export default function ProjectsList() {
         }}
         ListEmptyComponent={
           <View className="flex-1 justify-center items-center mt-20">
-            <Text className="text-black/30">No projects logged yet</Text>
+            <Text className="text-black/30 dark:text-white/30">
+              No projects logged yet
+            </Text>
           </View>
         }
       />

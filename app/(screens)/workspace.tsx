@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { View, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import { getHabits } from "@/db/habit";
 import { getMeetings } from "@/db/meeting";
@@ -31,6 +32,8 @@ const FOLDERS = [
 
 export default function Workspace() {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [counts, setCounts] = useState<Record<string, number>>({
     meetings: 0,
     projects: 0,
@@ -52,10 +55,15 @@ export default function Workspace() {
   );
 
   return (
-    <SafeAreaView edges={["top", "left", "right", "bottom"]} className="flex-1">
+    <SafeAreaView
+      edges={["top", "left", "right", "bottom"]}
+      className="flex-1 bg-white dark:bg-[#191919]"
+    >
       <View className="flex-1">
         <View className="p-8">
-          <Text className="font-bold text-4xl">What are we logging today?</Text>
+          <Text className="font-bold text-4xl text-black dark:text-white">
+            What are we logging today?
+          </Text>
         </View>
 
         <View className="px-6 gap-3">
@@ -64,23 +72,30 @@ export default function Workspace() {
               key={folder.key}
               onPress={() => router.push(folder.route as any)}
               activeOpacity={0.7}
-              className="flex-row items-center justify-between bg-white border border-black/5 rounded-2xl p-5"
+              className="flex-row items-center justify-between bg-white dark:bg-[#252525] border border-black/5 dark:border-white/5 rounded-2xl p-5"
             >
               <View className="flex-row items-center gap-4">
-                <View className="w-12 h-12 rounded-2xl bg-black items-center justify-center">
-                  <Ionicons name={folder.icon as any} size={22} color="white" />
+                <View className="w-12 h-12 rounded-2xl bg-black dark:bg-[#252525] items-center justify-center">
+                  <Ionicons
+                    name={folder.icon as any}
+                    size={22}
+                    color={isDark ? "#ADA9A3" : "white"}
+                  />
                 </View>
                 <View>
-                  <Text className="text-lg font-semibold text-black">
+                  <Text className="text-lg font-semibold text-black dark:text-white">
                     {folder.label}
                   </Text>
-                  <Text className="text-sm text-black/40 mt-0.5">
-                    {counts[folder.key]}{" "}
-                    {counts[folder.key] === 1 ? "logged" : "logged"}
+                  <Text className="text-sm text-black/40 dark:text-white/40 mt-0.5">
+                    {counts[folder.key]} logged
                   </Text>
                 </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#00000030" />
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={isDark ? "#ffffff30" : "#00000030"}
+              />
             </TouchableOpacity>
           ))}
         </View>
