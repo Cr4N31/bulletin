@@ -1,16 +1,24 @@
 import "../global.css";
-import { Stack } from "expo-router";
+import { Stack, Redirect } from "expo-router";
 import { initDatabase } from "@/db/schema";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { UserProvider } from "@/context/UserContext";
 import { useColorScheme } from "nativewind";
+import { hasCompletedOnboarding } from "@/utils/onboarding";
 
 export default function RootLayout() {
-  useEffect(() => {
-    initDatabase();
-  }, []);
+  const [onboarded, setOnboarded] = useState<boolean | null>(null);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  useEffect(() => {
+    initDatabase();
+    hasCompletedOnboarding().then(setOnboarded);
+  }, []);
+
+  if (onboarded === null) {
+    return null;
+  }
 
   return (
     <UserProvider>
@@ -22,8 +30,10 @@ export default function RootLayout() {
           },
         }}
       >
+        <Stack.Screen name="onboarding" />
         <Stack.Screen name="(screens)" />
       </Stack>
+      {!onboarded && <Redirect href="/Onboarding" />}
     </UserProvider>
   );
 }

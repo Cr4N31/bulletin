@@ -15,22 +15,6 @@ export default function Settings() {
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
   const { userName, updateUserName } = useUser();
 
-  async function sendTestNotification() {
-    const granted = await requestNotificationPermission();
-    if (!granted) {
-      console.log("Notification permission not granted");
-      return;
-    }
-
-    await Notifications.scheduleNotificationAsync({
-      content: { title: "Test", body: "If you see this, notifications work" },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: 5,
-      },
-    });
-  }
-
   return (
     <SafeAreaView
       edges={["top", "bottom", "left", "right"]}
@@ -101,14 +85,10 @@ export default function Settings() {
             <Text className="text-sm text-gray-400">{appVersion}</Text>
           </View>
         </View>
-        <TouchableOpacity
-          onPress={sendTestNotification}
-          className="bg-white dark:bg-gray-900 border border-black/5 dark:border-white/10 rounded-2xl p-4 mt-3"
-        >
-          <Text className="text-sm text-black dark:text-white text-center">
-            Send test notification
-          </Text>
-        </TouchableOpacity>
+      </View>
+
+      <View className="absolute bottom-0 left-0 right-0 flex justify-center items-center p-6">
+        <Text className="text-sm text-gray-400">Powered By CRAN3</Text>
       </View>
     </SafeAreaView>
   );

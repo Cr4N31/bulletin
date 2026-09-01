@@ -17,6 +17,8 @@ import {
 import { getProjects, Project } from "@/db/project";
 import { getMeetings, Meeting } from "@/db/meeting";
 import { parseMeetingDateTime } from "@/utils/meetingTime";
+import { LineChart } from "react-native-gifted-charts";
+import { getActivityCountByDay } from "@/db/activityLog";
 
 function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
@@ -27,7 +29,9 @@ export default function Index() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { userName } = useUser();
-
+  const [weeklyActivity, setWeeklyActivity] = useState<
+    { date: string; count: number }[]
+  >([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [priorityHabit, setPriorityHabit] = useState<Habit | null>(null);
   const [priorityLogs, setPriorityLogs] = useState<HabitLog[]>([]);
@@ -40,7 +44,7 @@ export default function Index() {
       getHabits().then(setHabits);
       getProjects().then(setProjects);
       getMeetings().then(setMeetings);
-
+      getActivityCountByDay(7).then(setWeeklyActivity);
       getPriorityHabit().then((habit) => {
         setPriorityHabit(habit);
         if (habit) {
@@ -60,6 +64,12 @@ export default function Index() {
 
   const surface = isDark ? "#252525" : "white";
   const border = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+  const chartData = weeklyActivity.map((d) => ({
+    value: d.count,
+    label: new Date(d.date)
+      .toLocaleDateString("en-US", { weekday: "short" })
+      .slice(0, 2),
+  }));
 
   return (
     <SafeAreaView
@@ -119,6 +129,43 @@ export default function Index() {
             <Text className="text-xs text-black/40 dark:text-white/40 mt-1">
               Habits tracked
             </Text>
+          </View>
+        </View>
+
+        <View className="mt-8">
+          <Text className="text-lg font-bold text-black dark:text-white mb-3">
+            This week
+          </Text>
+          <View
+            className="rounded-2xl p-5"
+            style={{
+              backgroundColor: surface,
+              borderWidth: 1,
+              borderColor: border,
+            }}
+          >
+            <LineChart
+              data={chartData}
+              color={isDark ? "#ffffff" : "#000000"}
+              thickness={2}
+              dataPointsColor={isDark ? "#ffffff" : "#000000"}
+              hideRules
+              xAxisThickness={0}
+              yAxisThickness={0}
+              yAxisTextStyle={{
+                color: isDark ? "#ffffff40" : "#00000040",
+                fontSize: 10,
+              }}
+              xAxisLabelTextStyle={{
+                color: isDark ? "#ffffff40" : "#00000040",
+                fontSize: 10,
+              }}
+              curved
+              height={120}
+              noOfSections={3}
+              initialSpacing={10}
+              spacing={40}
+            />
           </View>
         </View>
 
