@@ -5,15 +5,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import Constants from "expo-constants";
-import * as Notifications from "expo-notifications";
-import { requestNotificationPermission } from "@/utils/notifications";
+import { APP_LANGUAGES, translate } from "@/utils/localization";
 
 export default function Settings() {
   const router = useRouter();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
-  const { userName, updateUserName } = useUser();
+  const { userName, updateUserName, language, updateLanguage } = useUser();
+  const t = (key: Parameters<typeof translate>[1]) => translate(language, key);
+  const selectedLanguage =
+    APP_LANGUAGES.find((item) => item.code === language)?.nativeName ??
+    "English";
 
   return (
     <SafeAreaView
@@ -32,18 +35,18 @@ export default function Settings() {
           />
         </TouchableOpacity>
         <Text className="text-2xl font-bold text-black dark:text-white">
-          Settings
+          {t("settings")}
         </Text>
       </View>
 
       <View className="px-6 mt-4">
         <Text className="text-xs font-medium text-gray-400 mb-2">
-          YOUR NAME
+          {t("yourNameLabel")}
         </Text>
         <TextInput
           value={userName}
           onChangeText={updateUserName}
-          placeholder="Enter your name"
+          placeholder={t("enterYourName")}
           placeholderTextColor="#A3A3A3"
           className="bg-white dark:bg-[#252525] border border-black/5 dark:border-white/10 rounded-2xl px-4 h-14 text-base text-black dark:text-white"
         />
@@ -51,7 +54,7 @@ export default function Settings() {
 
       <View className="px-6 mt-8">
         <Text className="text-xs font-medium text-gray-400 mb-2">
-          PREFERENCES
+          {t("preferences")}
         </Text>
         <View className="bg-white dark:bg-[#252525] border border-black/5 dark:border-white/10 rounded-2xl overflow-hidden">
           <View className="flex-row items-center justify-between p-4">
@@ -64,7 +67,7 @@ export default function Settings() {
                 />
               </View>
               <Text className="text-sm font-medium text-black dark:text-white">
-                Dark mode
+                {t("darkMode")}
               </Text>
             </View>
             <Switch
@@ -74,21 +77,71 @@ export default function Settings() {
               thumbColor="#fff"
             />
           </View>
+          <View className="h-px bg-black/5 dark:bg-white/10 ml-16" />
+          <View className="p-4">
+            <View className="flex-row items-center gap-3 mb-3">
+              <View className="w-9 h-9 rounded-full bg-black dark:bg-[#191919] items-center justify-center">
+                <Ionicons
+                  name="language-outline"
+                  size={18}
+                  color={isDark ? "#fff" : "#000"}
+                />
+              </View>
+              <View>
+                <Text className="text-sm font-medium text-black dark:text-white">
+                  {t("language")}
+                </Text>
+                <Text className="text-xs text-gray-400">{selectedLanguage}</Text>
+              </View>
+            </View>
+            <View className="flex-row gap-2 ml-12">
+              {APP_LANGUAGES.map((item) => {
+                const selected = item.code === language;
+                return (
+                  <TouchableOpacity
+                    key={item.code}
+                    onPress={() => updateLanguage(item.code)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    className={`rounded-full px-3 py-2 ${
+                      selected
+                        ? "bg-black dark:bg-white"
+                        : "bg-black/5 dark:bg-white/10"
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs font-medium ${
+                        selected
+                          ? "text-white dark:text-black"
+                          : "text-black dark:text-white"
+                      }`}
+                    >
+                      {item.nativeName}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
         </View>
       </View>
 
       <View className="px-6 mt-8">
-        <Text className="text-xs font-medium text-gray-400 mb-2">ABOUT</Text>
+        <Text className="text-xs font-medium text-gray-400 mb-2">
+          {t("about")}
+        </Text>
         <View className="bg-white dark:bg-[#252525] border border-black/5 dark:border-white/10 rounded-2xl overflow-hidden">
           <View className="flex-row items-center justify-between p-4">
-            <Text className="text-sm text-black dark:text-white">Version</Text>
+            <Text className="text-sm text-black dark:text-white">
+              {t("version")}
+            </Text>
             <Text className="text-sm text-gray-400">{appVersion}</Text>
           </View>
         </View>
       </View>
 
       <View className="absolute bottom-0 left-0 right-0 flex justify-center items-center p-6">
-        <Text className="text-sm text-gray-400">Powered By CRAN3</Text>
+        <Text className="text-sm text-gray-400">{t("poweredBy")}</Text>
       </View>
     </SafeAreaView>
   );

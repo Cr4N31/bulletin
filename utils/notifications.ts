@@ -28,7 +28,9 @@ export async function requestNotificationPermission(): Promise<boolean> {
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
-      importance: Notifications.AndroidImportance.DEFAULT,
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      sound: "default",
     });
   }
 
@@ -142,4 +144,20 @@ export async function scheduleHabitReminders(
   }
 
   return ids;
+}
+
+export async function scheduleOneShotReminder(
+  title: string,
+  body: string,
+  triggerDate: Date,
+): Promise<string | null> {
+  if (triggerDate.getTime() <= Date.now()) return null;
+
+  return await Notifications.scheduleNotificationAsync({
+    content: { title, body, sound: "default" },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: triggerDate,
+    },
+  });
 }

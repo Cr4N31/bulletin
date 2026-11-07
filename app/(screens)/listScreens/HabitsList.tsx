@@ -63,7 +63,7 @@ export default function HabitsList() {
                 {item.title}
               </Text>
             </View>
-            {item.isPriority && (
+            {Boolean(item.isPriority) && (
               <Ionicons
                 name="star"
                 size={16}

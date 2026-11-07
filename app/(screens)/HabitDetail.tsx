@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
+import { LineChart } from "react-native-gifted-charts";
 import {
   getHabit,
   getHabitLogs,
@@ -13,6 +14,10 @@ import {
 } from "@/db/habit";
 import StreakGraph from "@/components/StreakGraph";
 import { logActivity } from "@/db/activityLog";
+import {
+  scheduleTodaysReminders,
+  cancelTodaysReminders,
+} from "@/utils/habitReminders";
 
 function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
@@ -22,9 +27,14 @@ function getCurrentStreak(logs: HabitLog[]): number {
   const completedDates = new Set(
     logs.filter((l) => l.completed).map((l) => l.date),
   );
-  let streak = 0;
-  const cursor = new Date();
+  const today = getTodayString();
 
+  const cursor = new Date();
+  if (!completedDates.has(today)) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  let streak = 0;
   while (true) {
     const dateStr = cursor.toISOString().split("T")[0];
     if (completedDates.has(dateStr)) {
@@ -36,6 +46,29 @@ function getCurrentStreak(logs: HabitLog[]): number {
   }
 
   return streak;
+}
+
+function getStreakHistory(logs: HabitLog[], daysBack: number = 30) {
+  const completedDates = new Set(
+    logs.filter((l) => l.completed).map((l) => l.date),
+  );
+  const history: { date: string; streakValue: number }[] = [];
+  let running = 0;
+
+  for (let i = daysBack - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+
+    if (completedDates.has(dateStr)) {
+      running++;
+    } else {
+      running = 0;
+    }
+    history.push({ date: dateStr, streakValue: running });
+  }
+
+  return history;
 }
 
 export default function HabitDetail() {
@@ -58,15 +91,21 @@ export default function HabitDetail() {
     }, [habitId]),
   );
 
-  async function handleToggleToday() {
-    if (!habit) return;
+  useFocusEffect(
+    useCallback(() => {
+      if (habit) {
+        scheduleTodaysReminders(habit, isDoneToday);
+      }
+    }, [habit, isDoneToday]),
+  );
+
+  async function handleMarkDone() {
+    if (!habit || isDoneToday) return;
 
     await toggleHabitLog(habitId, today);
-    await logActivity(
-      "habit",
-      isDoneToday ? "unmarked" : "completed",
-      `${isDoneToday ? "Unmarked" : "Completed"} "${habit.title}"`,
-    );
+    await logActivity("habit", "completed", `Completed "${habit.title}"`);
+    await cancelTodaysReminders(habitId);
+
     const updated = await getHabitLogs(habitId, 30);
     setLogs(updated);
   }
@@ -80,6 +119,8 @@ export default function HabitDetail() {
   }
 
   const streak = getCurrentStreak(logs);
+  const streakHistory = getStreakHistory(logs, 30);
+  const chartData = streakHistory.map((h) => ({ value: h.streakValue }));
 
   return (
     <SafeAreaView
@@ -116,14 +157,46 @@ export default function HabitDetail() {
 
       <View className="px-6 mt-8">
         <Text className="text-lg font-bold mb-4 text-black dark:text-white">
+          Streak history
+        </Text>
+        <View className="bg-white dark:bg-[#252525] border border-black/5 dark:border-white/5 rounded-2xl p-4">
+          <LineChart
+            data={chartData}
+            color={isDark ? "#ffffff" : "#000000"}
+            thickness={2}
+            dataPointsColor={isDark ? "#ffffff" : "#000000"}
+            hideRules
+            hideDataPoints
+            xAxisThickness={0}
+            yAxisThickness={0}
+            yAxisTextStyle={{
+              color: isDark ? "#ffffff40" : "#00000040",
+              fontSize: 10,
+            }}
+            curved
+            height={100}
+            noOfSections={3}
+            initialSpacing={5}
+            spacing={10}
+          />
+        </View>
+        <Text className="text-xs text-black/40 dark:text-white/40 mt-2">
+          Rises with each consecutive day completed — drops to zero when a
+          scheduled day is missed.
+        </Text>
+      </View>
+
+      <View className="px-6 mt-8">
+        <Text className="text-lg font-bold mb-4 text-black dark:text-white">
           Last 30 days
         </Text>
         <StreakGraph logs={logs} />
       </View>
 
       <TouchableOpacity
-        onPress={handleToggleToday}
-        activeOpacity={0.85}
+        onPress={handleMarkDone}
+        disabled={isDoneToday}
+        activeOpacity={isDoneToday ? 1 : 0.85}
         className={`mx-6 mt-10 h-14 rounded-2xl items-center justify-center flex-row gap-2 ${
           isDoneToday
             ? "bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/10"

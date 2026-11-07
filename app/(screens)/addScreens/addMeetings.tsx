@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { logActivity } from "@/db/activityLog";
 import { createMeeting } from "@/db/meeting";
@@ -9,6 +9,8 @@ import {
   scheduleMeetingReminder,
 } from "@/utils/notifications";
 import { parseDateTime } from "@/utils/meetingTime";
+import { translate } from "@/utils/localization";
+import { useUser } from "@/context/UserContext";
 import { useColorScheme } from "nativewind";
 import {
   Alert,
@@ -20,39 +22,54 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const QUICK_TIMES = ["9:00 AM", "10:00 AM", "12:00 PM", "2:00 PM", "4:00 PM"];
+const QUICK_TIMES = [9, 10, 12, 14, 16];
 
 export default function AddMeetings() {
   const router = useRouter();
+  const { date: dateParam } = useLocalSearchParams<{ date?: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { language } = useUser();
+  const t = (key: Parameters<typeof translate>[1]) => translate(language, key);
+  const initialDate =
+    typeof dateParam === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
+      ? new Date(
+          Number(dateParam.slice(0, 4)),
+          Number(dateParam.slice(5, 7)) - 1,
+          Number(dateParam.slice(8, 10)),
+        )
+      : new Date();
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(initialDate);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const formattedDate = selectedDate.toLocaleDateString("en-US", {
+  const formattedDate = selectedDate.toLocaleDateString(language, {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
-  const formattedTime = selectedTime.toLocaleTimeString("en-US", {
+  const formattedTime = selectedTime.toLocaleTimeString(language, {
     hour: "numeric",
     minute: "2-digit",
   });
 
   async function createMeet() {
     if (!title.trim()) {
-      Alert.alert("Missing title", "Please enter a meeting title.");
+      Alert.alert(t("missingTitle"), t("enterMeetingTitle"));
       return;
     }
 
     try {
       setIsSaving(true);
 
-      const date = selectedDate.toISOString().split("T")[0];
+      const date = [
+        selectedDate.getFullYear(),
+        String(selectedDate.getMonth() + 1).padStart(2, "0"),
+        String(selectedDate.getDate()).padStart(2, "0"),
+      ].join("-");
       const time = selectedTime.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
@@ -83,8 +100,8 @@ export default function AddMeetings() {
     } catch (error) {
       console.error("Failed to create meeting:", error);
       Alert.alert(
-        "Something went wrong",
-        "We couldn't create the meeting. Please try again.",
+        t("somethingWentWrong"),
+        t("meetingCreateError"),
       );
     } finally {
       setIsSaving(false);
@@ -110,7 +127,7 @@ export default function AddMeetings() {
         </TouchableOpacity>
 
         <Text className="text-lg font-semibold text-black dark:text-white">
-          New Meeting
+          {t("newMeeting")}
         </Text>
         <TouchableOpacity
           onPress={createMeet}
@@ -120,7 +137,7 @@ export default function AddMeetings() {
           <Text
             className={`font-semibold ${isSaving ? "text-gray-400" : "text-black dark:text-white"}`}
           >
-            {isSaving ? "Saving..." : "Done"}
+            {isSaving ? t("saving") : t("done")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -132,13 +149,13 @@ export default function AddMeetings() {
       >
         <View className="px-6 pt-8">
           <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider">
-            Meeting
+            {t("meeting")}
           </Text>
 
           <TextInput
             value={title}
             onChangeText={setTitle}
-            placeholder="What is this meeting about?"
+            placeholder={t("meetingPrompt")}
             placeholderTextColor="#A3A3A3"
             autoFocus
             selectionColor={isDark ? "white" : "black"}
@@ -146,7 +163,7 @@ export default function AddMeetings() {
           />
 
           <Text className="text-gray-500 dark:text-gray-400 mt-3 text-base">
-            Keep track of the conversations that matter.
+            {t("meetingDescription")}
           </Text>
         </View>
 
@@ -158,13 +175,13 @@ export default function AddMeetings() {
               </View>
               <View className="rounded-full bg-white/10 px-3 py-2">
                 <Text className="text-white/70 text-xs font-medium">
-                  MEETING
+                  {t("meetingBadge")}
                 </Text>
               </View>
             </View>
 
             <Text className="text-white text-2xl font-bold mt-6">
-              {title.trim() || "Your new meeting"}
+              {title.trim() || t("newMeetingPreview")}
             </Text>
 
             <View className="flex-row items-center mt-4">
@@ -191,10 +208,10 @@ export default function AddMeetings() {
 
         <View className="px-6 mt-10">
           <Text className="text-lg font-bold text-black dark:text-white">
-            When?
+            {t("when")}
           </Text>
           <Text className="text-gray-500 dark:text-gray-400 mt-1">
-            Pick a date for your meeting.
+            {t("pickMeetingDate")}
           </Text>
 
           <TouchableOpacity
@@ -227,10 +244,10 @@ export default function AddMeetings() {
 
         <View className="px-6 mt-8">
           <Text className="text-lg font-bold text-black dark:text-white">
-            What time?
+            {t("whatTime")}
           </Text>
           <Text className="text-gray-500 dark:text-gray-400 mt-1">
-            Choose when the meeting starts.
+            {t("pickMeetingTime")}
           </Text>
 
           <TouchableOpacity
@@ -265,18 +282,20 @@ export default function AddMeetings() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 8, paddingTop: 12 }}
           >
-            {QUICK_TIMES.map((quickTime) => {
-              const selected = formattedTime === quickTime;
+            {QUICK_TIMES.map((hour) => {
+              const quickTime = new Date(2000, 0, 1, hour).toLocaleTimeString(
+                language,
+                { hour: "numeric", minute: "2-digit" },
+              );
+              const selected =
+                selectedTime.getHours() === hour &&
+                selectedTime.getMinutes() === 0;
               return (
                 <TouchableOpacity
-                  key={quickTime}
+                  key={hour}
                   onPress={() => {
-                    const [timePart, modifier] = quickTime.split(" ");
-                    let [hours, minutes] = timePart.split(":").map(Number);
-                    if (modifier === "PM" && hours !== 12) hours += 12;
-                    if (modifier === "AM" && hours === 12) hours = 0;
                     const newTime = new Date(selectedTime);
-                    newTime.setHours(hours, minutes, 0, 0);
+                    newTime.setHours(hour, 0, 0, 0);
                     setSelectedTime(newTime);
                   }}
                   activeOpacity={0.8}
@@ -299,7 +318,7 @@ export default function AddMeetings() {
 
         <View className="px-6 mt-10">
           <Text className="text-lg font-bold text-black dark:text-white">
-            Notes
+            {t("notes")}
           </Text>
           <Text className="text-gray-500 dark:text-gray-400 mt-1">
             Anything you want to remember beforehand?
@@ -309,7 +328,7 @@ export default function AddMeetings() {
             <TextInput
               value={notes}
               onChangeText={setNotes}
-              placeholder="Add an agenda, people to discuss with, or anything else..."
+              placeholder={t("notesPrompt")}
               placeholderTextColor="#A3A3A3"
               multiline
               textAlignVertical="top"
@@ -330,7 +349,7 @@ export default function AddMeetings() {
           <Text
             className={`font-semibold text-base ${isDark ? "text-black" : "text-white"}`}
           >
-            {isSaving ? "Creating meeting..." : "Create meeting"}
+            {isSaving ? t("creatingMeeting") : t("createMeeting")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

@@ -38,16 +38,18 @@ export async function createHabit(
 }
 
 export async function getHabits(): Promise<Habit[]> {
-  return await db.getAllAsync<Habit>(`
-    SELECT * FROM habit
-    ORDER BY title ASC
-  `);
+  const habits = await db.getAllAsync<any>(
+    `SELECT * FROM habit ORDER BY title ASC`,
+  );
+  return habits.map((h) => ({ ...h, isPriority: Boolean(h.isPriority) }));
 }
 
 export async function getHabit(id: number): Promise<Habit | null> {
-  return await db.getFirstAsync<Habit>(`SELECT * FROM habit WHERE id = ?`, [
-    id,
-  ]);
+  const habit = await db.getFirstAsync<any>(
+    `SELECT * FROM habit WHERE id = ?`,
+    [id],
+  );
+  return habit ? { ...habit, isPriority: Boolean(habit.isPriority) } : null;
 }
 
 export async function updateHabit(

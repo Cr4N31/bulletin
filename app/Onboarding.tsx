@@ -16,8 +16,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { setOnboardingComplete } from "@/utils/onboarding";
-import { requestNotificationPermission } from "@/utils/notifications";
 import { useUser } from "@/context/UserContext";
+import { APP_LANGUAGES, translate } from "@/utils/localization";
 
 const { width } = Dimensions.get("window");
 
@@ -43,14 +43,16 @@ export default function Onboarding() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { updateUserName } = useUser();
+  const { updateUserName, language, updateLanguage } = useUser();
 
   const [index, setIndex] = useState(0);
+  const [showLanguageStep, setShowLanguageStep] = useState(true);
   const [showNameStep, setShowNameStep] = useState(false);
   const [name, setName] = useState("");
   const listRef = useRef<FlatList>(null);
 
   const isLastSlide = index === SLIDES.length - 1;
+  const t = (key: Parameters<typeof translate>[1]) => translate(language, key);
 
   function goToSlide(i: number) {
     listRef.current?.scrollToIndex({ index: i, animated: true });
@@ -72,8 +74,83 @@ export default function Onboarding() {
   }
 
   async function handleSkip() {
+    await updateLanguage(language);
     await setOnboardingComplete();
     router.replace("/(screens)");
+  }
+
+  if (showLanguageStep) {
+    return (
+      <SafeAreaView
+        edges={["top", "bottom"]}
+        className="flex-1 bg-white dark:bg-[#191919]"
+      >
+        <View className="flex-row justify-end px-6 pt-2">
+          <TouchableOpacity onPress={handleSkip}>
+            <Text className="text-black/40 dark:text-white/40 font-medium">
+              {t("skip")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View className="flex-1 justify-center px-8">
+          <View className="w-24 h-24 rounded-full bg-black dark:bg-white items-center justify-center mb-8 self-center">
+            <Ionicons
+              name="language-outline"
+              size={40}
+              color={isDark ? "#191919" : "white"}
+            />
+          </View>
+          <Text className="text-3xl font-bold text-black dark:text-white text-center">
+            {t("chooseLanguage")}
+          </Text>
+          <Text className="text-base text-black/50 dark:text-white/50 text-center mt-3 mb-8">
+            {t("languageDescription")}
+          </Text>
+          <View className="gap-3">
+            {APP_LANGUAGES.map((item) => {
+              const selected = language === item.code;
+              return (
+                <TouchableOpacity
+                  key={item.code}
+                  onPress={() => updateLanguage(item.code)}
+                  className={`h-14 rounded-2xl px-4 flex-row items-center justify-between border ${
+                    selected
+                      ? "bg-black dark:bg-white border-black dark:border-white"
+                      : "bg-[#F8F8F8] dark:bg-[#252525] border-black/5 dark:border-white/10"
+                  }`}
+                >
+                  <Text
+                    className={`text-base font-medium ${selected ? "text-white dark:text-black" : "text-black dark:text-white"}`}
+                  >
+                    {item.nativeName}
+                  </Text>
+                  {selected && (
+                    <Ionicons
+                      name="checkmark"
+                      size={20}
+                      color={isDark ? "#191919" : "white"}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+        <View className="px-6 mb-4">
+          <TouchableOpacity
+            onPress={() => setShowLanguageStep(false)}
+            activeOpacity={0.85}
+            className="h-14 rounded-2xl items-center justify-center bg-black dark:bg-white"
+          >
+            <Text
+              className={`font-semibold text-base ${isDark ? "text-black" : "text-white"}`}
+            >
+              {t("continue")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   if (showNameStep) {
@@ -96,16 +173,16 @@ export default function Onboarding() {
             </View>
 
             <Text className="text-3xl font-bold text-black dark:text-white text-center">
-              What should we call you?
+              {t("whatShouldWeCallYou")}
             </Text>
             <Text className="text-base text-black/50 dark:text-white/50 text-center mt-3 mb-8">
-              This is just so things feel a little more like yours.
+              {t("nameDescription")}
             </Text>
 
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="Your name"
+              placeholder={t("yourName")}
               placeholderTextColor="#A3A3A3"
               autoFocus
               selectionColor={isDark ? "white" : "black"}
@@ -122,12 +199,12 @@ export default function Onboarding() {
               <Text
                 className={`font-semibold text-base ${isDark ? "text-black" : "text-white"}`}
               >
-                Get started
+                {t("getStarted")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleFinish} className="mt-3">
               <Text className="text-center text-black/30 dark:text-white/30 text-sm">
-                Skip for now
+                {t("skipForNow")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -144,7 +221,7 @@ export default function Onboarding() {
       <View className="flex-row justify-end px-6 pt-2">
         <TouchableOpacity onPress={handleSkip}>
           <Text className="text-black/40 dark:text-white/40 font-medium">
-            Skip
+            {t("skip")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -170,10 +247,22 @@ export default function Onboarding() {
               />
             </View>
             <Text className="text-3xl font-bold text-black dark:text-white text-center">
-              {item.title}
+              {t(
+                item.title === "Track what matters"
+                  ? "trackWhatMatters"
+                  : item.title === "See your progress"
+                    ? "seeYourProgress"
+                    : "neverMissABeat",
+              )}
             </Text>
             <Text className="text-base text-black/50 dark:text-white/50 text-center mt-4 leading-6">
-              {item.body}
+              {t(
+                item.title === "Track what matters"
+                  ? "trackDescription"
+                  : item.title === "See your progress"
+                    ? "progressDescription"
+                    : "remindersDescription",
+              )}
             </Text>
           </View>
         )}
@@ -206,7 +295,7 @@ export default function Onboarding() {
           <Text
             className={`font-semibold text-base ${isDark ? "text-black" : "text-white"}`}
           >
-            {isLastSlide ? "Continue" : "Next"}
+            {isLastSlide ? t("continue") : t("next")}
           </Text>
         </TouchableOpacity>
       </View>
