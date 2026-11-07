@@ -62,20 +62,20 @@ export default function AddMeetings() {
       return;
     }
 
+    setIsSaving(true);
+    const date = [
+      selectedDate.getFullYear(),
+      String(selectedDate.getMonth() + 1).padStart(2, "0"),
+      String(selectedDate.getDate()).padStart(2, "0"),
+    ].join("-");
+    const time = selectedTime.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    let meetingId: number;
     try {
-      setIsSaving(true);
-
-      const date = [
-        selectedDate.getFullYear(),
-        String(selectedDate.getMonth() + 1).padStart(2, "0"),
-        String(selectedDate.getDate()).padStart(2, "0"),
-      ].join("-");
-      const time = selectedTime.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-
-      const meetingId = await createMeeting(
+      meetingId = await createMeeting(
         title.trim(),
         date,
         time,
@@ -86,7 +86,14 @@ export default function AddMeetings() {
         "created",
         `Scheduled "${title}" for ${date} at ${time}`,
       );
+    } catch (error) {
+      console.error("Failed to save meeting:", error);
+      Alert.alert(t("somethingWentWrong"), t("meetingCreateError"));
+      setIsSaving(false);
+      return;
+    }
 
+    try {
       const granted = await requestNotificationPermission();
       if (granted) {
         const meetingDateTime = parseDateTime(date, time);
@@ -95,17 +102,17 @@ export default function AddMeetings() {
         );
         await scheduleMeetingReminder(meetingId, title.trim(), reminderTime);
       }
-
-      router.back();
     } catch (error) {
-      console.error("Failed to create meeting:", error);
-      Alert.alert(
-        t("somethingWentWrong"),
-        t("meetingCreateError"),
-      );
-    } finally {
+      console.error("Meeting saved, but reminder setup failed:", error);
+      Alert.alert(t("meetingSaved"), t("reminderNotSet"), [
+        { text: t("done"), onPress: () => router.back() },
+      ]);
       setIsSaving(false);
+      return;
     }
+
+    setIsSaving(false);
+    router.back();
   }
 
   return (

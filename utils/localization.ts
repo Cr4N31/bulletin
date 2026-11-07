@@ -74,6 +74,9 @@ const translations = {
     enterMeetingTitle: "Please enter a meeting title.",
     somethingWentWrong: "Something went wrong",
     meetingCreateError: "We couldn't create the meeting. Please try again.",
+    meetingSaved: "Meeting saved",
+    reminderNotSet:
+      "Your meeting was saved, but its reminder couldn't be set. You can still find it in your calendar.",
   },
   es: {
     chooseLanguage: "Elige tu idioma",
@@ -138,6 +141,9 @@ const translations = {
     enterMeetingTitle: "Escribe el título de la reunión.",
     somethingWentWrong: "Algo salió mal",
     meetingCreateError: "No se pudo crear la reunión. Inténtalo de nuevo.",
+    meetingSaved: "Reunión guardada",
+    reminderNotSet:
+      "La reunión se guardó, pero no se pudo configurar el recordatorio. Puedes verla en el calendario.",
   },
   fr: {
     chooseLanguage: "Choisissez votre langue",
@@ -202,6 +208,9 @@ const translations = {
     enterMeetingTitle: "Saisissez le titre de la réunion.",
     somethingWentWrong: "Une erreur s’est produite",
     meetingCreateError: "Impossible de créer la réunion. Réessayez.",
+    meetingSaved: "Réunion enregistrée",
+    reminderNotSet:
+      "La réunion est enregistrée, mais son rappel n’a pas pu être créé. Vous la retrouverez dans le calendrier.",
   },
 } as const;
 

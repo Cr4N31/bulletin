@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import { AndroidImportance } from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 
@@ -12,9 +13,18 @@ Notifications.setNotificationHandler({
   }),
 });
 
+const DEFAULT_CHANNEL_ID = "default";
+
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!Device.isDevice) {
     return false;
+  }
+
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync(DEFAULT_CHANNEL_ID, {
+      name: "Bulletin reminders",
+      importance: AndroidImportance.DEFAULT,
+    });
   }
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -23,15 +33,6 @@ export async function requestNotificationPermission(): Promise<boolean> {
   if (existingStatus !== "granted") {
     const { status } = await Notifications.requestPermissionsAsync();
     finalStatus = status;
-  }
-
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      sound: "default",
-    });
   }
 
   return finalStatus === "granted";
@@ -55,6 +56,7 @@ export async function scheduleMeetingReminder(
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: triggerDate,
+      channelId: DEFAULT_CHANNEL_ID,
     },
   });
 }
@@ -75,6 +77,7 @@ export async function scheduleHabitReminder(
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour,
       minute,
+      channelId: DEFAULT_CHANNEL_ID,
     },
   });
 }
@@ -123,6 +126,7 @@ export async function scheduleHabitReminders(
         weekday,
         hour: morningHour,
         minute: 0,
+        channelId: DEFAULT_CHANNEL_ID,
       },
     });
 
@@ -137,6 +141,7 @@ export async function scheduleHabitReminders(
         weekday,
         hour: eveningHour,
         minute: 0,
+        channelId: DEFAULT_CHANNEL_ID,
       },
     });
 
@@ -158,6 +163,7 @@ export async function scheduleOneShotReminder(
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: triggerDate,
+      channelId: DEFAULT_CHANNEL_ID,
     },
   });
 }

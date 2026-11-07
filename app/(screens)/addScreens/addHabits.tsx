@@ -69,30 +69,42 @@ export default function AddHabit() {
       return;
     }
 
+    setIsSaving(true);
+    let habitId: number;
     try {
-      setIsSaving(true);
-
-      const habitId = await createHabitInDb(
+      habitId = await createHabitInDb(
         title.trim(),
         isPriority,
         JSON.stringify(scheduleDays),
       );
-
-      const granted = await requestNotificationPermission();
-      if (granted) {
-        await scheduleHabitReminders(habitId, title.trim(), scheduleDays);
-      }
-
-      router.back();
     } catch (error) {
       console.error("Failed to create habit:", error);
       Alert.alert(
         "Something went wrong",
         "We couldn't create this habit. Please try again.",
       );
-    } finally {
       setIsSaving(false);
+      return;
     }
+
+    try {
+      const granted = await requestNotificationPermission();
+      if (granted) {
+        await scheduleHabitReminders(habitId, title.trim(), scheduleDays);
+      }
+    } catch (error) {
+      console.error("Habit saved, but reminder setup failed:", error);
+      Alert.alert(
+        "Habit saved",
+        "Your habit was saved, but its reminders couldn't be set.",
+        [{ text: "OK", onPress: () => router.back() }],
+      );
+      setIsSaving(false);
+      return;
+    }
+
+    setIsSaving(false);
+    router.back();
   };
 
   return (
