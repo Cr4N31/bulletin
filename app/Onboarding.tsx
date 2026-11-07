@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useRouter } from "expo-router";
+import { StackActions, useNavigation } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -40,7 +40,7 @@ const SLIDES = [
 ];
 
 export default function Onboarding() {
-  const router = useRouter();
+  const navigation = useNavigation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { updateUserName, language, updateLanguage } = useUser();
@@ -70,13 +70,13 @@ export default function Onboarding() {
     }
     //await requestNotificationPermission();
     await setOnboardingComplete();
-    router.replace("/(screens)");
+    navigation.dispatch(StackActions.replace("(screens)"));
   }
 
   async function handleSkip() {
     await updateLanguage(language);
     await setOnboardingComplete();
-    router.replace("/(screens)");
+    navigation.dispatch(StackActions.replace("(screens)"));
   }
 
   if (showLanguageStep) {

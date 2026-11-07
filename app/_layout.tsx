@@ -30,7 +30,7 @@ export default function RootLayout() {
           },
         }}
       >
-        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="Onboarding" />
         <Stack.Screen name="(screens)" />
       </Stack>
       {!onboarded && <Redirect href="/Onboarding" />}
